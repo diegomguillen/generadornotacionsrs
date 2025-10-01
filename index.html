@@ -35,8 +35,8 @@
     <!-- DATALISTS FOR AUTOCOMPLETE -->
     <datalist id="contextos-list">
         <option value="cerrada"></option>
-				<option value="abriendo_total"></option>
-				<option value="abriendo_peatonal"></option>
+		<option value="abriendo_total"></option>
+		<option value="abriendo_peatonal"></option>
         <option value="abierta_total"></option>
         <option value="abierta_peatonal"></option>
         <option value="parada_en_apertura"></option>
@@ -51,6 +51,7 @@
         <option value="interrumpida"></option>
         <option value="liberada"></option>
         <option value="error"></option>
+		<option value="timeout"></option>
         <option value="evento_a_definir"></option>
     </datalist>
 		<datalist id="accion_actuador-list">
@@ -62,7 +63,8 @@
         <option value="sem_rojo_encender"></option>
         <option value="sem_rojo_apagar"></option>
         <option value="lam_dest_encender"></option>
-				<option value="lam_dest_apagar"></option>
+		<option value="lam_dest_apagar"></option>
+		<option value="iniciar_espera"></option>
     </datalist>
 		<datalist id="fuentes-list">
         <option value="BT1"></option>
@@ -73,9 +75,10 @@
         <option value="FTC"></option>
         <option value="BANDA"></option>
         <option value="FCA"></option>
-				<option value="FCC"></option>
-				<option value="STOP"></option>
-				<option value="CANBUS"></option>
+		<option value="FCC"></option>
+		<option value="STOP"></option>
+		<option value="CANBUS"></option>
+		<option value="SISTEMA"></option>
     </datalist>
 		<datalist id="condiciones-list">
         <option value="hasta"></option>
@@ -192,7 +195,7 @@
             const createCondicionInput = (opIndex, condIndex) => { 
                  return `
                     <div class="flex items-center gap-2">
-                        <input type="text" class="input-base condicion-param" data-op-index="${opIndex}" data-cond-index="${condIndex}" placeholder="Parámetro (Ej: hasta)" list="condidiones-list">
+                        <input type="text" class="input-base condicion-param" data-op-index="${opIndex}" data-cond-index="${condIndex}" placeholder="Parámetro (Ej: hasta, duracion)" list="condidiones-list">
                         <span class="text-gray-400">:</span>
                         <input type="text" class="input-base condicion-valor" data-op-index="${opIndex}" data-cond-index="${condIndex}" placeholder="Valor (Ej: FCA:activo)" list="condidiones-valor-list">
                         <button class="btn btn-danger btn-sm remove-condicion" data-op-index="${opIndex}" data-cond-index="${condIndex}">X</button>
