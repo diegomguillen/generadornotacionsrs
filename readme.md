@@ -7,6 +7,7 @@
 ## 1. Sintaxis General y Lógica de Componentes
 
 Una regla completa sigue la siguiente estructura:
+![Un esquema del proceso](notacion.jpg)
 
 * **Contexto**: (Opcional, pero recomendable) Define el contexto en el que estamos, desde dónde partimos y dónde acabamos.
     * *Ejemplo*: `estado(puerta_abierta)`
@@ -34,3 +35,39 @@ Una regla completa sigue la siguiente estructura:
 > Se usa para describir una maniobra completa. Toda la lógica está en una única regla que contiene una condición `{...}`. Una vez iniciada, es un "tren sin paradas", ignora todos los comandos ordinarios y sólo puede ser interrumpida por una regla de seguridad explícita y de mayor prioridad (ej. un STOP).
 
 **Ejemplo 1: Maniobra de Movimiento Simple**
+estado(cerrada) ⇒ [ abrir_puerta(BT1:impulso){hasta: posicion_abierta_total} ] ⇒ estado(abriendo)
+
+* **Por qué es atómica**: La condición `{hasta: posicion_abierta_total}` establece un destino claro. La regla se compromete a ejecutar la apertura de principio a fin.
+
+**Ejemplo 2: Secuencia de Acciones Atómica**
+estado(abierta) ⇒ [ preaviso_luminoso(SISTEMA:orden_movimiento){duracion: 2s} ⇒ cerrar_puerta(SISTEMA:timeout){hasta: posicion_cerrada} ] ⇒ estado(cerrando)
+
+* **Por qué es atómica**: Aunque contiene dos pasos (preaviso y cierre), está definida en una única regla. El sistema se compromete a ejecutar la secuencia completa. El preaviso no puede ser interrumpido y, una vez finalizado, el cierre se inicia y completa de forma igualmente atómica.
+
+**Ejemplo 3: Maniobra con Doble Condición de Parada**
+estado(cerrando) ⇒ [ abrir_puerta(SISTEMA:evento_seguridad){recorrido: 10cm, hasta: FCA:activo} ] ⇒ estado(abriendo)
+
+* **Por qué es atómica**: La acción tiene dos posibles finales (`10cm` o `FCA`), pero ambos están definidos dentro de la misma condición `{...}`. La regla se compromete a `abrir_puerta` hasta que se cumpla la primera de esas dos condiciones, ignorando otros eventos no prioritarios mientras tanto.
+
+### Comportamiento Interrumpible: "VARIAS REGLAS = UN MENÚ"
+
+> Se usa para describir un estado en el que el sistema está "escuchando" y puede reaccionar a múltiples eventos. Se define mediante varias reglas que comparten el mismo `estado(...)` de entrada. El sistema es reactivo y está a la espera; es una "estación de tren" con varias posibles salidas.
+
+**Ejemplo 1: Interrupción Manual de una Maniobra**
+estado(cerrando) ⇒ [ stop_puerta(FC_Cierre:activo) ] ⇒ estado(cerrada)
+estado(cerrando) ⇒ [ abrir_puerta(ST1:interrupcion){hasta: posicion_abierta_total} ] ⇒ estado(abriendo)
+
+* **Por qué es interrumpible**: El estado `cerrando` es interrumpible porque el sistema no solo tiene programado un final (llegar a `FC_Cierre`), sino que también está escuchando activamente una posible interrupción de la fotocélula (`ST1`). Lo que ocurra primero, gana.
+
+**Ejemplo 2: Menú de Opciones desde Reposo**
+estado(parado) ⇒ [ abrir_puerta(BT1:impulso){hasta: posicion_abierta_total} ] ⇒ estado(abriendo)
+estado(parado) ⇒ [ abrir_puerta_peatonal(BT2:impulso){hasta: posicion_peatonal} ] ⇒ estado(abriendo_peatonal)
+
+* **Por qué es interrumpible**: El estado `parado` no es un final, sino un estado de espera reactivo. Ofrece un "menú" al usuario: si se pulsa `BT1`, se ejecuta una apertura total; si se pulsa `BT2`, se ejecuta una peatonal. La elección del usuario "interrumpe" el estado de reposo para iniciar una maniobra.
+
+**Ejemplo 3: Interrupción de un Proceso Cíclico de Fondo**
+estado(parado) ⇒ cíclico[ encender_luz_standby(SISTEMA:evento) ⇒ esperar{...} ⇒ ... ]
+estado(parado) ⇒ [ abrir_puerta(SISTEMA:orden_movimiento) ] ⇒ estado(abriendo)
+
+* **Por qué es interrumpible**: El estado `parado` tiene un comportamiento cíclico  (la luz parpadea). Sin embargo, este ciclo no es un "compromiso" atómico. El estado sigue escuchando otros eventos. Una orden_movimiento tiene prioridad, interrumpe el ciclo de parpadeo y fuerza una transición al estado `abriendo`.
+
